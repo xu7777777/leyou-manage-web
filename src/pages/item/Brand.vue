@@ -5,7 +5,7 @@
       <!--搜索框，与search属性关联-->
       <v-spacer/>
       <v-flex xs3>
-      <v-text-field label="输入关键字搜索" v-model.lazy="search" append-icon="search" hide-details/>
+        <v-text-field label="输入关键字搜索" v-model.lazy="search" append-icon="search" hide-details/>
       </v-flex>
     </v-card-title>
     <v-divider/>
@@ -15,8 +15,7 @@
       :pagination.sync="pagination"
       :total-items="totalBrands"
       :loading="loading"
-      class="elevation-1"
-    >
+      class="elevation-1">
       <template slot="items" slot-scope="props">
         <td class="text-xs-center">{{ props.item.id }}</td>
         <td class="text-xs-center">{{ props.item.name }}</td>
@@ -43,7 +42,9 @@
           <v-toolbar-title>{{isEdit ? '修改' : '新增'}}品牌</v-toolbar-title>
           <v-spacer/>
           <!--关闭窗口的按钮-->
-          <v-btn icon @click="closeWindow"><v-icon>close</v-icon></v-btn>
+          <v-btn icon @click="closeWindow">
+            <v-icon>close</v-icon>
+          </v-btn>
         </v-toolbar>
         <!--对话框的内容，表单-->
         <v-card-text class="px-5" style="height:400px">
@@ -68,7 +69,7 @@
         loading: true, // 是否在加载中
         pagination: {}, // 分页信息
         headers: [
-          {text: 'id', align: 'center', value: 'id'},
+          {text: 'id', align: 'center', sortable: false, value: 'id'},
           {text: '名称', align: 'center', sortable: false, value: 'name'},
           {text: 'LOGO', align: 'center', sortable: false, value: 'image'},
           {text: '首字母', align: 'center', value: 'letter', sortable: true,},
@@ -100,18 +101,21 @@
     methods: {
       getDataFromServer() { // 从服务的加载数的方法。
         // 发起请求
-        this.$http.get("/item/brand/page", {
+        this.$http.get("/brand/list", {
           params: {
-            key: this.search, // 搜索条件
-            page: this.pagination.page,// 当前页
-            rows: this.pagination.rowsPerPage,// 每页大小
-            sortBy: this.pagination.sortBy,// 排序字段
-            desc: this.pagination.descending// 是否降序
+            cond: {
+              idOrTitle: this.search, // 搜索条件
+              sortBy: this.pagination.sortBy,// 排序字段
+              desc: this.pagination.descending// 是否降序
+            },
+            current: this.pagination.page,// 当前页
+            size: this.pagination.rowsPerPage,// 每页大小
           }
         }).then(resp => { // 这里使用箭头函数
-          this.brands = resp.data.items;
-          this.totalBrands = resp.data.total;
+          this.brands = resp.data.data.list;
+          this.totalBrands = resp.data.data.totalCount;
           // 完成赋值后，把加载状态赋值为false
+          console.log(this.totalBrands)
           this.loading = false;
         })
       },
@@ -123,7 +127,7 @@
         // 把oldBrand变为null
         this.oldBrand = null;
       },
-      editBrand(oldBrand){
+      editBrand(oldBrand) {
         // 根据品牌信息查询商品分类
         this.$http.get("/item/brand/bid/" + oldBrand.id)
           .then(({data}) => {
@@ -137,21 +141,21 @@
             this.oldBrand.categories = data;
           })
       },
-      del(oldBrand){
+      del(oldBrand) {
         this.$http.get("/item/brand/del/" + oldBrand.id);
 
         // 重新加载数据
         this.getDataFromServer();
       },
-      closeWindow(){
+      closeWindow() {
         // 重新加载数据
         this.getDataFromServer();
         // 关闭窗口
         this.show = false;
       }
     },
-    components:{
-        BrandForm
+    components: {
+      BrandForm
     }
   }
 </script>
